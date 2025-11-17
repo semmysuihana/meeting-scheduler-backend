@@ -1,8 +1,8 @@
 # Meeting Scheduler Backend 🗓️
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-blue.svg)](https://www.typescriptlang.org/)
-[![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
-[![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/en/)
+[![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge\&logo=express\&logoColor=white)](https://expressjs.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge\&logo=nodedotjs\&logoColor=white)](https://nodejs.org/en/)
 
 ## Description
 
@@ -10,112 +10,98 @@ The `meeting-scheduler-backend` is a RESTful API built with Node.js, Express, an
 
 ## Table of Contents
 
-1.  [Features](#features)
-2.  [Tech Stack](#tech-stack)
-3.  [Installation](#installation)
-4.  [Usage](#usage)
-5.  [How to use](#how-to-use)
-6.  [Project Structure](#project-structure)
-7.  [API Reference](#api-reference)
-8.  [Contributing](#contributing)
-9.  [License](#license)
-10. [Important Links](#important-links)
-11. [Footer](#footer)
+1. [Features](#features)
+2. [Tech Stack](#tech-stack)
+3. [Installation](#installation)
+4. [Usage](#usage)
+5. [How to use](#how-to-use)
+6. [Project Structure](#project-structure)
+7. [API Reference](#api-reference)
+8. [Prisma Setup](#prisma-setup)
+9. [.env.example](#envexample)
+10. [Contributing](#contributing)
+11. [License](#license)
+12. [Important Links](#important-links)
+13. [Footer](#footer)
 
 ## Features ✨
 
--   **Meeting Booking**: Allows users to book meetings by providing organizer ID, name, email, start time, end time, and timezone. 📝
--   **Status Updates**: Enables updating the status of a booking (e.g., booked). ✅
--   **Organizer Settings**: Allows administrators to configure organizer-specific settings, including:
-    -   Working hours ⏰
-    -   Meeting duration ⏳
-    -   Buffer time before and after meetings ⏱️
-    -   Minimum notice period ⚠️
-    -   Blackout dates 🚫
-    -   Timezone 🌐
--   **Validations**: Includes comprehensive validations for:
-    -   Input data (e.g., email format, required fields) ℹ️
-    -   Meeting slot availability (e.g., working hours, blackout dates, minimum notice) 📅
-    -   Booking duplication (overlapping bookings) 👯
--   **Data Retrieval**: Provides endpoints for retrieving:
-    -   All organizer data ℹ️
-    -   Organizer data by ID 🆔
-    -   Booking data for a specific organizer 📚
+* **Meeting Booking**: Allows users to book meetings by providing organizer ID, name, email, start time, end time, and timezone.
+* **Status Updates**: Enables updating the status of a booking (e.g., booked).
+* **Organizer Settings**: Administrators can configure:
+
+  * Working hours
+  * Meeting duration
+  * Buffer times
+  * Minimum notice period
+  * Blackout dates
+  * Timezone
+* **Validations**: Ensures valid inputs, available time slots, and prevents overlapping bookings.
+* **Data Retrieval**: Fetch organizer data, booking lists, and individual organizer details.
 
 ## Tech Stack 💻
 
--   [Node.js](https://nodejs.org/) - JavaScript runtime environment
--   [Express](https://expressjs.com/) - Web framework for Node.js
--   [TypeScript](https://www.typescriptlang.org/) - Superset of JavaScript which adds static typing
--   [pg](https://node-postgres.com/) - PostgreSQL client for Node.js
--   [dotenv](https://github.com/motdotla/dotenv) - Zero-dependency module that loads environment variables from a `.env` file
--   [luxon](https://moment.github.io/luxon/) - A library for working with dates and times
--   [cors](https://github.com/expressjs/cors) - CORS middleware for Express
+* Node.js
+* Express
+* TypeScript
+* PostgreSQL (pg)
+* Prisma ORM
+* Luxon
+* Dotenv
+* CORS
 
 ## Installation 🛠️
 
-1.  **Clone the repository:**
+### 1. Clone the repository
 
-    ```bash
-    git clone https://github.com/semmysuihana/meeting-scheduler-backend.git
-    cd meeting-scheduler-backend
-    ```
+```bash
+git clone https://github.com/semmysuihana/meeting-scheduler-backend.git
+cd meeting-scheduler-backend
+```
 
-2.  **Install dependencies:**
+### 2. Install dependencies
 
-    ```bash
-    npm install
-    ```
+```bash
+npm install
+```
 
-3.  **Set up environment variables:**
+### 3. Set up environment variables
 
-    -   Create a `.env` file in the root directory.
-    -   Add the following variables, replacing the values with your PostgreSQL database credentials:
+Buat file `.env` berdasarkan `.env.example`.
 
-        ```
-        DB_USER=your_db_user
-        DB_HOST=your_db_host
-        DB_NAME=your_db_name
-        DB_PASSWORD=your_db_password
-        DB_PORT=your_db_port
-        PORT=3000
-        ```
+### 4. Run database setup
 
-4.  **Run database migrations (if applicable):**
+Jika database kosong, gunakan file `init.sql` untuk membuat schema.
 
-    -   This project does not include database migrations, so ensure that the required tables (`organizer`, `settings`, and `booking`) are created in your PostgreSQL database.
+```bash
+psql -U your_user -d your_database -f init.sql
+```
 
 ## Usage 🚀
 
-1.  **Start the development server:**
+### Start development server
 
-    ```bash
-    npm start
-    ```
+```bash
+npm start
+```
 
-    This command uses `ts-node` to run the `src/index.ts` file.
+### Build for production
 
-2.  **Build for production:**
+```bash
+npm run build
+```
 
-    ```bash
-    npm run build
-    ```
+### Start production server
 
-    This command compiles the TypeScript code into JavaScript files in the `dist` directory.
-
-3.  **Start the production server:**
-
-    ```bash
-    npm run start:prod
-    ```
-
-    This command runs the compiled JavaScript file `dist/index.js` using Node.js.
+```bash
+npm run start:prod
+```
 
 ## How to use 💡
 
 ### Booking a Meeting
 
-Send a POST request to the `/book` endpoint with the following JSON payload:
+POST `/book`
 
 ```json
 {
@@ -130,73 +116,11 @@ Send a POST request to the `/book` endpoint with the following JSON payload:
 
 ### Updating Booking Status
 
-Send a PUT request to `/book/:status/:id/status` endpoint. Replace `:status` with the new status and `:id` with the booking ID. Include any required payload data in the request body.
-
-For example, to update a booking status to `booked`:
-
-```
-PUT /book/booked/123/status
-Content-Type: application/json
-
-{
-  "payload": {
-    "organizer_id": "some_organizer_id",
-    "start_time_utc": "2024-01-02T10:00:00.000Z",
-    "end_time_utc": "2024-01-02T11:00:00.000Z",
-    "user_timezone": "America/Los_Angeles"
-  }
-}
-```
+PUT `/book/:status/:id/status`
 
 ### Updating Organizer Settings
 
-Send a PUT request to `/settings/:edit/:id` endpoint. Replace `:edit` with the setting type (`general`, `working_hours`, or `blackouts`) and `:id` with the organizer ID.  Include the new setting data in the request body.
-
-For example, to update general settings:
-
-```
-PUT /settings/general/123
-Content-Type: application/json
-
-{
-  "name": "New Organizer Name",
-  "meeting_duration": 60,
-  "buffer_before": 10,
-  "buffer_after": 10,
-  "min_notice_minutes": 30,
-  "timezone": "America/Los_Angeles"
-}
-```
-
-To update working hours:
-
-```
-PUT /settings/working_hours/123
-Content-Type: application/json
-
-{
-  "working_hours": {
-    "monday": "09:00-17:00",
-    "tuesday": "09:00-17:00",
-    "wednesday": "09:00-17:00",
-    "thursday": "09:00-17:00",
-    "friday": "09:00-17:00",
-    "saturday": "",
-    "sunday": ""
-  }
-}
-```
-
-To update blackout dates:
-
-```
-PUT /settings/blackouts/123
-Content-Type: application/json
-
-{
-  "blackouts": ["2024-12-25", "2024-01-01"]
-}
-```
+PUT `/settings/:edit/:id`
 
 ## Project Structure 📂
 
@@ -204,94 +128,61 @@ Content-Type: application/json
 meeting-scheduler-backend/
 ├── src/
 │   ├── controller/
-│   │   ├── getData.ts         # Data retrieval logic
-│   │   ├── manageData.ts      # Data manipulation logic (insert, update)
-│   │   ├── validController.ts # Validation logic
-│   ├── db.ts                # Database connection setup
-│   ├── index.ts             # Main application entry point
-├── README.md              # Project documentation
-├── package.json           # Project dependencies and scripts
+│   │   ├── getData.ts
+│   │   ├── manageData.ts
+│   │   ├── validController.ts
+│   ├── db.ts
+│   ├── index.ts
+├── init.sql
+├── README.md
+├── package.json
 ```
 
 ## API Reference ℹ️
 
-### Endpoints
+| Method | Endpoint                   | Description               |
+| ------ | -------------------------- | ------------------------- |
+| GET    | `/`                        | Get all organizers        |
+| GET    | `/book/:id`                | Get organizer by ID       |
+| GET    | `/book/:id/booking`        | Get booking list          |
+| POST   | `/book`                    | Create booking            |
+| PUT    | `/book/:status/:id/status` | Update booking status     |
+| PUT    | `/settings/:edit/:id`      | Update organizer settings |
 
-| Method | Endpoint                       | Description                                                                           | Request Body                                                                                                                                                                                                                            | Response Body                                                                                       |
-| :----- | :----------------------------- | :------------------------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------- |
-| GET    | `/`                            | Retrieves all organizer data.                                                         | None                                                                                                                                                                                                                                    | Array of organizer objects.                                                                         |
-| GET    | `/book/:id`                     | Retrieves organizer data by ID.                                                       | None                                                                                                                                                                                                                                    | Organizer object.                                                                                   |
-| GET    | `/book/:id/booking`             | Retrieves all bookings for an organizer, including organizer settings                   | None                                                                                                                                                                                                                                    | Array of booking objects with organizer details.                                                    |
-| POST   | `/book`                          | Creates a new booking.                                                              | `{ organizer_id, name, email, start_time_utc, end_time_utc, user_timezone }`                                                                                                                                                       | `{ success: string }` or `{ error: string }`                                                          |
-| PUT    | `/book/:status/:id/status`      | Updates the status of a booking.                                                      | `{ payload: {organizer_id, start_time_utc, end_time_utc, user_timezone} }` (Payload Required when changing the status to booked for validation purposes)                                                                          | `{ success: string, data: object }` or `{ error: string }`                                          |
-| PUT    | `/settings/:edit/:id`          | Updates organizer settings (general, working hours, blackouts).                         | Varies depending on the `:edit` parameter (see "How to use" section for examples)                                                                                                                                                | `{ success: string, data: object }` or `{ error: string }`                                          |
+---
 
-## Contributing 🤝
+## Prisma Setup 🧩
 
-Contributions are welcome! Please follow these steps:
+Project ini menggunakan **Prisma ORM** untuk mengakses database PostgreSQL.
+Karena struktur database berasal dari *db pull*, project **tidak memakai Prisma Migrate**, tetapi schema ditentukan oleh **init.sql**.
 
-1.  Fork the repository.
-2.  Create a new branch for your feature or bug fix.
-3.  Make your changes and commit them with descriptive messages.
-4.  Submit a pull request.
+### 1. Install Prisma
 
-## License 📝
-
-This project is under the [ISC License](https://opensource.org/license/isc/).
-
-## Important Links 🔗
-
-*   [Repository Link](https://github.com/semmysuihana/meeting-scheduler-backend)
-
-## Footer 🦶
-
-
-*   Repository Name: meeting-scheduler-backend
-*   Repository URL: [https://github.com/semmysuihana/meeting-scheduler-backend](https://github.com/semmysuihana/meeting-scheduler-backend)
-*   Author: [semmysuihana](https://github.com/semmysuihana)
-
-
-Feel free to fork, contribute, and help improve this project! Give it a star ⭐ if you find it useful. If you encounter any issues, please submit them to the [issue tracker](https://github.com/semmysuihana/meeting-scheduler-backend/issues).
-
-➕ Tambahan ke README: Prisma Setup
-Prisma Setup 🧩
-
-Project ini menggunakan Prisma ORM untuk mengakses database PostgreSQL.
-Karena schema berasal dari db pull, struktur database tidak menggunakan Prisma Migrate, tetapi dibuat melalui file SQL (init.sql) yang sudah disediakan.
-
-1. Install Prisma CLI & Prisma Client
+```bash
 npm install prisma @prisma/client
+```
 
-2. Generate Prisma Client
+### 2. Generate Prisma Client
 
-Setelah meng-install dependency, jalankan:
-
+```bash
 npx prisma generate
+```
 
+### 3. Database Setup
 
-Ini akan membuat Prisma Client yang digunakan di dalam kode backend.
+Struktur tabel disediakan dalam `init.sql`, gunakan:
 
-Database Setup 🗄️
-
-Project ini menggunakan PostgreSQL.
-Struktur tabel sudah disediakan dalam file:
-
-init.sql
-
-
-Untuk membangun database baru, jalankan:
-
+```bash
 psql -U your_user -d your_database -f init.sql
+```
 
+Pastikan `.env` sudah diisi benar.
 
-Pastikan kredensial PostgreSQL sesuai dengan .env kamu.
+---
 
-➕ Tambahan: .env.example
+## .env.example
 
-Project ini menyediakan template environment variable agar pengguna dapat membuat file .env mereka sendiri.
-
-Buat file .env.example dengan isi berikut:
-
+```
 # === POSTGRESQL / PRISMA ===
 DB_USER=your_postgres_username
 DB_HOST=your_postgres_host
@@ -307,17 +198,31 @@ PORT=4000
 
 # Example psql command:
 # psql "postgresql://your_postgres_username:your_postgres_password@your_postgres_host/your_database_name?sslmode=require&channel_binding=require"
+```
 
-# NOTE:
-# - Jangan commit file .env asli.
-# - File ini hanya template.
-# - Setelah clone repo: cp .env.example .env
+### Cara Memakai `.env.example`
 
-➕ Cara Memakai .env.example
-
-Setelah clone repo:
-
+```
 cp .env.example .env
-
+```
 
 Isi dengan kredensial PostgreSQL kamu sendiri.
+
+---
+
+## Contributing 🤝
+
+Contributions are welcome! Please follow standard GitHub workflow.
+
+## License 📝
+
+This project uses the ISC License.
+
+## Important Links 🔗
+
+* Repository: [https://github.com/semmysuihana/meeting-scheduler-backend](https://github.com/semmysuihana/meeting-scheduler-backend)
+
+## Footer 🦶
+
+Repository Name: meeting-scheduler-backend
+Au
