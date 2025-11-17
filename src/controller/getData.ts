@@ -41,9 +41,16 @@ function getData() {
       return message;
   }
 
-  async function getDataBooking(organizerId: string) {
+  async function getDataBooking(organizerId: string, status: null | string) {
     const query = `
-      SELECT * FROM booking WHERE organizer_id = $1;
+   SELECT b.*, o.name AS organizer_name, o.timezone AS organizer_timezone
+   ${status === "all" ? ", s.working_hours, s.meeting_duration, s.buffer_before, s.buffer_after, s.min_notice_minutes, s.blackouts" : ""}
+FROM booking b
+INNER JOIN organizer o ON b.organizer_id = o.id
+    ${status === "all" ? "INNER JOIN settings s ON b.organizer_id = s.organizer_id" : ""}
+WHERE b.organizer_id = $1
+  ${status === "all" ? "" : "AND b.status = 'booked'"}
+  AND b.slot_end_utc > NOW() AT TIME ZONE 'UTC'
     `;
     try {
       const results = await pool.query(query, [organizerId]);

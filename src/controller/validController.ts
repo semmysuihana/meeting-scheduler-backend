@@ -213,11 +213,11 @@ function isTimeOverlap(startA: DateTime, endA: DateTime, startB: DateTime, endB:
 }
 
 function checkValidDuplication(bookings: any[], start_time_utc: string, end_time_utc: string) {
-
+  console.log("start_time_utc", start_time_utc, "end_time_utc", end_time_utc);
   // Pastikan start/end user selalu DateTime
-  const startUTC = DateTime.fromISO(start_time_utc);
-  const endUTC = DateTime.fromISO(end_time_utc);
-
+  const startUTC = DateTime.fromISO(start_time_utc, { zone: "utc" });
+  const endUTC = DateTime.fromISO(end_time_utc, { zone: "utc" });
+  console.log("setelah convert start_time_utc", startUTC, "end_time_utc", endUTC);
   console.log("==== START DUPLICATION CHECK ====");
   console.log("User slot UTC:", startUTC.toISO(), "-", endUTC.toISO());
   console.log("Existing bookings count:", bookings.length);
@@ -249,6 +249,7 @@ function checkValidDuplication(bookings: any[], start_time_utc: string, end_time
     console.log("  Existing booking slot UTC:", bookingStart.toISO(), "-", bookingEnd.toISO());
 
     if (isTimeOverlap(startUTC, endUTC, bookingStart, bookingEnd)) {
+
       message.error = "Selected time is already booked";
       console.log("❌ Duplicate found! Slot cannot be booked.");
       console.log("==== END DUPLICATION CHECK ====");
@@ -259,13 +260,233 @@ function checkValidDuplication(bookings: any[], start_time_utc: string, end_time
   }
 
   message.success = "Slot is valid";
+  
   console.log("✅ No duplication found. Slot is valid.");
   console.log("==== END DUPLICATION CHECK ====");
   return true;
 }
 
+function checkValidSettingGeneral(id, name, meeting_duration, buffer_before, buffer_after, min_notice_minutes, timezone, dataBooking) {
 
-  return { checkValid, checkValidMeeting, checkValidDuplication, message };
+  if (!name){
+    message.error = "Name cannot be empty";
+    return false;
+  }
+
+  if (!meeting_duration || meeting_duration < 30 || meeting_duration > 240) {
+    message.error = "Meeting duration must be between 30 and 240 minutes";
+    return false;
+  }
+
+  if (!buffer_before || buffer_before < 0 || buffer_before > 60) {
+    message.error = "Buffer before must be between 0 and 60 minutes";
+    return false;
+  }
+
+  if (!buffer_after || buffer_after < 0 || buffer_after > 60) {
+    message.error = "Buffer after must be between 0 and 60 minutes";
+    return false;
+  }
+
+  if (!min_notice_minutes || min_notice_minutes < 0 || min_notice_minutes > 120) {
+    message.error = "Min notice minutes must be between 0 and 120 minutes";
+    return false;
+  }
+
+  if (!timezone){
+    message.error = "Timezone cannot be empty";
+    return false;
+  }
+ 
+      if (IANAZone.isValidZone(timezone) === false) {
+        message.error = "Invalid timezone";
+        return false;
+      }
+
+
+  if (dataBooking.length > 0) {
+    message.error = `Organizer has already created a meeting as booked, cannot update settings, please cancel or reschedule the meeting first. 
+    This is data booking: ${dataBooking.map((item) => "Id: " + item.id + " Name: " + item.name).join(", ")}`;
+    return false;
+  }
+
+  
+  return true;
+
+}
+
+interface BookingData {
+  id: number;
+  name: string;
+  slot_start?: string;
+  slot_end?: string;
+  status?: string;
+}
+
+function checkValidSettingWorkingHours(
+  id: string | number,
+  working_hours: Record<string, string> | any,
+  dataBooking: BookingData[]
+) {
+  console.log("checkValidSettingWorkingHours", id, working_hours, dataBooking);
+  if(!id || !working_hours || !dataBooking){
+    message.error = "All fields are required";
+    return false;
+  }
+  // 1️⃣ Pastikan working_hours berbentuk object
+  if (!working_hours || typeof working_hours !== "object" || Array.isArray(working_hours)) {
+    message.error = "Working hours must be an object with days as keys";
+    return false;
+  }
+
+  // 2️⃣ Pastikan tidak kosong
+  if (Object.keys(working_hours).length === 0) {
+    message.error = "Working hours cannot be empty";
+    return false;
+  }
+
+  // 3️⃣ Validasi tiap hari
+  const validDays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+  for (const day in working_hours) {
+    const val = working_hours[day].trim();
+
+    // Cek hari valid
+    if (!validDays.includes(day.toLowerCase())) {
+      message.error = `Invalid day: ${day}. Must be one of ${validDays.join(", ")}`;
+      return false;
+    }
+
+    // Kosong boleh
+    if (!val) continue;
+
+    // Format HH:MM-HH:MM
+    const regex = /^([01]\d|2[0-3]):([0-5]\d)-([01]\d|2[0-3]):([0-5]\d)$/;
+    if (!regex.test(val)) {
+      message.error = `Invalid time format for ${day}: ${val}. Use HH:MM-HH:MM`;
+      return false;
+    }
+
+    // Cek start < end
+    const [start, end] = val.split("-");
+    if (start >= end) {
+      message.error = `Start time must be before end time for ${day}: ${val}`;
+      return false;
+    }
+  }
+
+  // 4️⃣ Cek booking aktif
+  if (dataBooking && dataBooking.length > 0) {
+    message.error = `Organizer has already created a meeting as booked, cannot update settings. 
+This is data booking: ${dataBooking
+      .map((item) => "Id: " + item.id + " Name: " + item.name)
+      .join(", ")}`;
+    return false;
+  }
+
+  return true;
+}
+
+function checkValidSettingBlackouts(
+  organizerId: number,
+  blackouts: string[],
+  dataBooking: any[],
+  organizerTz: string
+) {
+  console.log("===== START checkValidSettingBlackouts =====");
+  console.log("Organizer ID:", organizerId);
+  console.log("Blackouts input:", blackouts);
+  console.log("Data booking:", dataBooking);
+  console.log("Organizer timezone:", organizerTz);
+
+  // 1️⃣ Validasi input
+  if (!organizerId || !blackouts || !dataBooking) {
+    message.error = "All fields are required";
+    console.log("❌ Validation failed: missing fields");
+    return false;
+  }
+
+  if (!Array.isArray(blackouts)) {
+    message.error = "Blackouts must be an array";
+    console.log("❌ Validation failed: blackouts not an array");
+    return false;
+  }
+
+  for (const date of blackouts) {
+    console.log("Checking blackout date:", date);
+    if (!date || typeof date !== "string") {
+      message.error = `Invalid blackout date: ${date}`;
+      console.log("❌ Invalid blackout date format");
+      return false;
+    }
+
+    // Format YYYY-MM-DD
+    const regex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!regex.test(date)) {
+      message.error = `Invalid date format: ${date}. Use YYYY-MM-DD`;
+      console.log("❌ Invalid date regex check");
+      return false;
+    }
+
+    // Valid date JS
+    const d = new Date(date);
+    if (isNaN(d.getTime())) {
+      message.error = `Invalid date: ${date}`;
+      console.log("❌ Invalid JS date object");
+      return false;
+    }
+  }
+
+  // 2️⃣ Kalau blackouts kosong, lanjutkan saja
+  if (blackouts.length === 0) {
+    message.success = "No blackout dates, continue";
+    console.log("✅ No blackout dates, valid");
+    return { valid: true, message };
+  }
+
+  // 3️⃣ Konversi blackout ke UTC (full day)
+  console.log("Converting blackout dates to UTC full-day ranges...");
+  const blackoutRangesUTC = blackouts.map((dateStr) => {
+    const startUTC = DateTime.fromISO(dateStr, { zone: organizerTz })
+      .startOf("day")
+      .toUTC();
+    const endUTC = DateTime.fromISO(dateStr, { zone: organizerTz })
+      .endOf("day")
+      .toUTC();
+    console.log(`- Blackout ${dateStr}: startUTC = ${startUTC.toISO()}, endUTC = ${endUTC.toISO()}`);
+    return { startUTC, endUTC, dateStr };
+  });
+
+  // 4️⃣ Cek overlap dengan semua dataBooking
+  console.log("Checking overlap with booked slots...");
+  for (const booking of dataBooking) {
+    console.log(`- Checking booking ID ${booking.slot_start_utc} (${booking.id})...`);
+    const bookingStartUTC = DateTime.fromJSDate(booking.slot_start_utc).toUTC();
+const bookingEndUTC = DateTime.fromJSDate(booking.slot_end_utc).toUTC();
+
+    console.log(`Booking ID ${booking.id} (${booking.name}): startUTC = ${bookingStartUTC.toISO()}, endUTC = ${bookingEndUTC.toISO()}`);
+
+    for (const blackout of blackoutRangesUTC) {
+      const overlap =
+        bookingStartUTC < blackout.endUTC && bookingEndUTC > blackout.startUTC;
+
+      console.log(`- Checking blackout ${blackout.dateStr} overlap: ${overlap}`);
+      if (overlap) {
+        message.error = `Cannot set blackout on ${blackout.dateStr} because there's a booked meeting: ${booking.name} (ID: ${booking.id})`;
+        console.log("❌ Overlap detected! Cannot set blackout.");
+        return false;
+      }
+    }
+  }
+
+  message.success = "Blackouts are valid";
+  console.log("✅ No overlaps found. Blackouts are valid.");
+  console.log("===== END checkValidSettingBlackouts =====");
+  return { valid: true, message };
+}
+
+
+  // ✅ Semua valid
+  return { checkValid, checkValidMeeting, checkValidSettingGeneral, checkValidSettingWorkingHours, checkValidSettingBlackouts, checkValidDuplication, message };
 }
 
 export default validController;
