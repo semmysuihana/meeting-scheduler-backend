@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model booking {
+  id             Int       @id @default(autoincrement())
+  organizer_id   Int
+  slot_start_utc DateTime  @db.Timestamptz(6)
+  slot_end_utc   DateTime  @db.Timestamptz(6)
+  name           String
+  email          String
+  status         String?   @default("booked")
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  user_timezone  String?   @db.VarChar
+  organizer      organizer @relation(fields: [organizer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([organizer_id, slot_start_utc], map: "idx_booking_organizer_time")
+}
+
+model organizer {
+  id       Int       @id @default(autoincrement())
+  name     String
+  timezone String
+  booking  booking[]
+  settings settings?
+}
+
+model settings {
+  id                 Int       @id @default(autoincrement())
+  organizer_id       Int       @unique
+  working_hours      Json
+  meeting_duration   Int
+  buffer_before      Int?      @default(0)
+  buffer_after       Int?      @default(0)
+  min_notice_minutes Int?      @default(60)
+  blackouts          Json?     @default("[]")
+  organizer          organizer @relation(fields: [organizer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
