@@ -2,17 +2,15 @@ import express from "express";
 import type { Request, Response } from "express";
 // import pool from "./db";
 import dotenv from "dotenv";
-import pool from "./db.ts";
-import validController from "./controller/validController.ts";
-import getData from "./controller/getData.ts";
-import manageData from "./controller/manageData.ts";
+import validController from "./controller/validController";
+import getData from "./controller/getData";
+import manageData from "./controller/manageData";
 
 import cors from "cors";
-import { get } from "http";
 
 dotenv.config();
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 const app = express();
 app.use(cors());
@@ -104,7 +102,8 @@ app.put("/book/:status/:id/status", async (req: Request, res: Response) => {
     }
 
     // JALANKAN UPDATE STATUS
-    const result = await updateDataStatus(id, status);
+    const numberId = Number(id);
+    const result = await updateDataStatus(numberId, status);
     if (result.error) return res.status(200).json({ error: result.error });
 
     return res.status(200).json({ success: "Status updated", data: result });
@@ -180,12 +179,14 @@ app.put("/settings/:edit/:id", async (req: Request, res: Response) => {
   try {
      const resultData = await getDataBooking(id, "");
      console.log("ini data booking",resultData.data);
+     const numberId = Number(id);
     switch (req.params.edit) {
       case "general":
-        const validSettingGeneral = checkValidSettingGeneral(id, name, meeting_duration, buffer_before, buffer_after, min_notice_minutes, timezone, resultData.data);
+        
+        const validSettingGeneral = checkValidSettingGeneral(numberId, name, meeting_duration, buffer_before, buffer_after, min_notice_minutes, timezone, resultData.data);
         if (!validSettingGeneral) return res.status(200).json({ error: message.error });
 
-        const resultUpdate = await updateData(id, name, meeting_duration, buffer_before, buffer_after, min_notice_minutes, timezone);
+        const resultUpdate = await updateData(numberId, name, meeting_duration, buffer_before, buffer_after, min_notice_minutes, timezone);
 
         if (resultUpdate.error) return res.status(200).json({ error: resultUpdate.error });
         console.log(resultUpdate);
@@ -194,17 +195,17 @@ app.put("/settings/:edit/:id", async (req: Request, res: Response) => {
       case "working_hours":
         const validSettingWorkingHours = checkValidSettingWorkingHours(id, working_hours, resultData.data);
         if (!validSettingWorkingHours) return res.status(200).json({ error: message.error });
-
-        const resultUpdateWorkingHours = await updateDataWorkingHours(id, working_hours);
+        
+        const resultUpdateWorkingHours = await updateDataWorkingHours(numberId, working_hours);
         if (resultUpdateWorkingHours.error) return res.status(200).json({ error: resultUpdateWorkingHours.error });
         console.log(resultUpdateWorkingHours);
         return res.status(200).json({ success: resultUpdateWorkingHours.success });
         break;
       case "blackouts":
-        const validSettingBlackouts = checkValidSettingBlackouts(id, blackouts, resultData.data, timezone);
+        const validSettingBlackouts = checkValidSettingBlackouts(numberId, blackouts, resultData.data, timezone);
       
         if (!validSettingBlackouts) return res.status(200).json({ error: message.error });
-        const resultUpdateBlackouts = await updateDataBlackouts(id, blackouts);
+        const resultUpdateBlackouts = await updateDataBlackouts(numberId, blackouts);
         if (resultUpdateBlackouts.error) return res.status(200).json({ error: resultUpdateBlackouts.error });
         console.log(resultUpdateBlackouts);
         return res.status(200).json({ success: resultUpdateBlackouts.success });
@@ -218,7 +219,8 @@ app.put("/settings/:edit/:id", async (req: Request, res: Response) => {
   }
 });
 
+
 app.listen(PORT, "192.168.1.6", () => {
-  console.log(`✅ Server running at http://192.168.1.6:${PORT}`);
+  console.log(`Server running at http://192.168.1.6:${PORT}`);
 });
 

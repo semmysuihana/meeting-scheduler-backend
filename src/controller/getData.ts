@@ -1,4 +1,4 @@
-import pool from "./../db.ts";
+import pool from "./../db";
 
 function getData() {
   const message = { error: "", success: "", data: [] as any[] };

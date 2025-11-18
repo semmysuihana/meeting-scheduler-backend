@@ -6,12 +6,13 @@ interface Booking {
 }
 
 interface Blackout {
+  date: string;
   start_time_utc: string;
   end_time_utc: string;
 }
 
 interface OrganizerData {
-  working_hours: Record<string, string[]>; // {"Monday": ["09:00-17:00", "19:00-21:00"], ...}
+  working_hours: { [day: string]: string }; // ex: "09:00-17:00"
   min_notice_minutes: number;
   blackouts: Blackout[];
   bookings: Booking[];
@@ -79,12 +80,10 @@ function validController() {
 
     // Cek blackout
     // Misal blackout: ["2025-11-17", "2025-12-10"]
-for (const blackoutDateStr of organizerData.blackouts) {
-  // Buat DateTime di timezone organizer, jam 00:00
-  const blackoutStart = DateTime.fromISO(blackoutDateStr, { zone: organizerData.timezone }).startOf("day").toUTC();
-  const blackoutEnd = DateTime.fromISO(blackoutDateStr, { zone: organizerData.timezone }).endOf("day").toUTC();
+for (const blackout of organizerData.blackouts) {
+  const blackoutStart = DateTime.fromISO(blackout.date, { zone: organizerData.timezone }).startOf("day").toUTC();
+  const blackoutEnd = DateTime.fromISO(blackout.date, { zone: organizerData.timezone }).endOf("day").toUTC();
 
-  // cek overlap dengan slot user
   if ((startUTC >= blackoutStart && startUTC <= blackoutEnd) ||
       (endUTC >= blackoutStart && endUTC <= blackoutEnd) ||
       (startUTC <= blackoutStart && endUTC >= blackoutEnd)) {
@@ -94,6 +93,7 @@ for (const blackoutDateStr of organizerData.blackouts) {
 
   console.log("Blackout UTC:", blackoutStart.toISO(), "-", blackoutEnd.toISO());
 }
+
 
 
 
@@ -266,7 +266,7 @@ function checkValidDuplication(bookings: any[], start_time_utc: string, end_time
   return true;
 }
 
-function checkValidSettingGeneral(id, name, meeting_duration, buffer_before, buffer_after, min_notice_minutes, timezone, dataBooking) {
+function checkValidSettingGeneral(id: number, name: string, meeting_duration: number, buffer_before: number, buffer_after: number, min_notice_minutes: number, timezone: string, dataBooking: any[]) {
 
   if (!name){
     message.error = "Name cannot be empty";

@@ -1,8 +1,15 @@
-import pool from "./../db.ts";
+import pool from "./../db";
 function manageData(){
     let resultInsert = {data: [], error: "", success: ""};
 
-    async function insertData(organizer_id, name, email, start_time_utc, end_time_utc, user_timezone){
+   async function insertData(
+  organizer_id: number,
+  name: string,
+  email: string,
+  start_time_utc: string,
+  end_time_utc: string,
+  user_timezone: string
+){
         const query = `
         INSERT INTO booking (organizer_id, name, email, slot_start_utc, slot_end_utc, user_timezone, status)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
